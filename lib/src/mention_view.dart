@@ -328,12 +328,23 @@ class FlutterMentionsState extends State<FlutterMentions> {
       final lengthMap = <LengthMap>[];
 
       // split on each word and generate a list with start & end position of each word.
-      controller!.value.text.split(RegExp(r'(\s)')).forEach((element) {
-        lengthMap.add(
-            LengthMap(str: element, start: _pos, end: _pos + element.length));
+      // controller!.value.text.split(RegExp(r'(\s)')).forEach((element) {
+      //   lengthMap.add(
+      //       LengthMap(str: element, start: _pos, end: _pos + element.length));
 
-        _pos = _pos + element.length + 1;
-      });
+      //   _pos = _pos + element.length + 1;
+      // });
+final matches = RegExp(r'@\w+(?: \w+)*').allMatches(controller!.text);
+
+lengthMap.clear();
+for (final match in matches) {
+  final str = match.group(0)!;
+  lengthMap.add(LengthMap(
+    str: str,
+    start: match.start,
+    end: match.end,
+  ));
+}
 
       final val = lengthMap.indexWhere((element) {
         _pattern = widget.mentions.map((e) => e.trigger).join('|');
