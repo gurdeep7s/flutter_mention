@@ -292,32 +292,63 @@ class FlutterMentionsState extends State<FlutterMentions> {
     return data;
   }
 
-  void addMention(Map<String, dynamic> value, [Mention? list]) {
-    final selectedMention = _selectedMention!;
+  // void addMention(Map<String, dynamic> value, [Mention? list]) {
+  //   final selectedMention = _selectedMention!;
 
-    setState(() {
-      _selectedMention = null;
-    });
+  //   setState(() {
+  //     _selectedMention = null;
+  //   });
 
-    final _list = widget.mentions
-        .firstWhere((element) => selectedMention.str.contains(element.trigger));
+  //   final _list = widget.mentions
+  //       .firstWhere((element) => selectedMention.str.contains(element.trigger));
 
-    // find the text by range and replace with the new value.
-    controller!.text = controller!.value.text.replaceRange(
-      selectedMention.start,
-      selectedMention.end,
-      "${_list.trigger}${value['display']}${widget.appendSpaceOnAdd ? ' ' : ''}",
-    );
+  //   // find the text by range and replace with the new value.
+  //   controller!.text = controller!.value.text.replaceRange(
+  //     selectedMention.start,
+  //     selectedMention.end,
+  //     "${_list.trigger}${value['display']}${widget.appendSpaceOnAdd ? ' ' : ''}",
+  //   );
 
-    if (widget.onMentionAdd != null) widget.onMentionAdd!(value);
+  //   if (widget.onMentionAdd != null) widget.onMentionAdd!(value);
 
-    // Move the cursor to next position after the new mentioned item.
-    var nextCursorPosition =
-        selectedMention.start + 1 + value['display']?.length as int? ?? 0;
-    if (widget.appendSpaceOnAdd) nextCursorPosition++;
-    controller!.selection =
-        TextSelection.fromPosition(TextPosition(offset: nextCursorPosition));
-  }
+  //   // Move the cursor to next position after the new mentioned item.
+  //   var nextCursorPosition =
+  //       selectedMention.start + 1 + value['display']?.length as int? ?? 0;
+  //   if (widget.appendSpaceOnAdd) nextCursorPosition++;
+  //   controller!.selection =
+  //       TextSelection.fromPosition(TextPosition(offset: nextCursorPosition));
+  // }
+void addMention(Map<String, dynamic> value, [Mention? list]) {
+  final selectedMention = _selectedMention!;
+  setState(() {
+    _selectedMention = null;
+  });
+
+  final _list = widget.mentions.firstWhere(
+    (element) => selectedMention.str.contains(element.trigger),
+  );
+
+  // 🛠 Build markup manually, matching your markupBuilder
+  final String trigger = _list.trigger; // example: '@'
+  final String id = value['id'].toString(); // user id
+  final String display = value['display']; // full name like 'Gurdeep Singh'
+
+  final String markupText =
+      '$trigger[__${id}__](__${display}__)${widget.appendSpaceOnAdd ? ' ' : ''}';
+
+  controller!.text = controller!.value.text.replaceRange(
+    selectedMention.start,
+    selectedMention.end,
+    markupText,
+  );
+
+  if (widget.onMentionAdd != null) widget.onMentionAdd!(value);
+
+  // Correct cursor placement after the markup is inserted
+  int nextCursorPosition = selectedMention.start + markupText.length;
+  controller!.selection =
+      TextSelection.fromPosition(TextPosition(offset: nextCursorPosition));
+}
 
   void suggestionListerner() {
     final cursorPos = controller!.selection.baseOffset;
