@@ -320,35 +320,40 @@ class FlutterMentionsState extends State<FlutterMentions> {
   // }
 void addMention(Map<String, dynamic> value, [Mention? list]) {
   final selectedMention = _selectedMention!;
-  setState(() {
-    _selectedMention = null;
-  });
+  _selectedMention = null;
 
   final _list = widget.mentions.firstWhere(
     (element) => selectedMention.str.contains(element.trigger),
   );
 
-  // 🛠 Build markup manually, matching your markupBuilder
-  final String trigger = _list.trigger; // example: '@'
-  final String id = value['id'].toString(); // user id
-  final String display = value['display']; // full name like 'Gurdeep Singh'
+  final String displayText = value['display'];
+  final String trigger = _list.trigger;
 
-  final String markupText =
-      '$trigger[__${id}__](__${display}__)${widget.appendSpaceOnAdd ? ' ' : ''}';
+  // The actual text inserted into the visible TextField
+  final String mentionDisplayText =
+      "$trigger$displayText${widget.appendSpaceOnAdd == true ? ' ' : ''}";
 
-  controller!.text = controller!.value.text.replaceRange(
+  // Replace text in controller with display name only (not markup!)
+  controller!.text = controller!.text.replaceRange(
     selectedMention.start,
     selectedMention.end,
-    markupText,
+    mentionDisplayText,
   );
 
-  if (widget.onMentionAdd != null) widget.onMentionAdd!(value);
+  // Set cursor position right after the inserted mention
+  int nextCursorPosition = selectedMention.start + mentionDisplayText.length;
+  controller!.selection = TextSelection.fromPosition(
+    TextPosition(offset: nextCursorPosition),
+  );
 
-  // Correct cursor placement after the markup is inserted
-  int nextCursorPosition = selectedMention.start + markupText.length;
-  controller!.selection =
-      TextSelection.fromPosition(TextPosition(offset: nextCursorPosition));
+  // Inform listener
+  if (widget.onMentionAdd != null) {
+    widget.onMentionAdd!(value);
+  }
+
+  setState(() {});
 }
+
 
   void suggestionListerner() {
     final cursorPos = controller!.selection.baseOffset;
